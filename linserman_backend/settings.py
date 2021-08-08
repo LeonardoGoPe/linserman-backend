@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-$u4a__@d&0#9w)2dmork!te&c44ms#%cjtk8uvvnh7(*n$w(2-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['linserman.pythonanywhere.com']
 
 
 # Application definition
@@ -128,6 +128,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATIC_ROOT = '/home/linserman/linserman-backend/static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
