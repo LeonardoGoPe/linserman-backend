@@ -33,7 +33,7 @@ def login(request):
         return Response({'data':"Contraseña no válida",'code':400},status=status.HTTP_400_BAD_REQUEST)
 
     token, created = Token.objects.get_or_create(user=user)
-    
+
     return Response({'data':{
         'token':token.key,
         'nombres':user.nombres,
