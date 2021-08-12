@@ -23,44 +23,51 @@ class Actividad(models.Model):
 
 
 class Sector(models.Model):
-   id_sector= models.AutoField(primary_key=True)
+   id_sector = models.AutoField(primary_key=True)
    ciudad = models.CharField(max_length=255)
    sector = models.CharField(max_length=255)
    punto_cardinal = models.CharField(max_length=255)
 
 
+class SectorXActividad(models.Model):
+   id = models.AutoField(primary_key=True)
+   actividad_data = models.ForeignKey(Actividad, on_delete=models.CASCADE) #id_actividad
+
+class ContratoXSector(models.Model):
+   id = models.AutoField(primary_key=True)
+   sector_data = models.ForeignKey(Sector, on_delete=models.CASCADE) #id_sector
+   actividades = models.ManyToManyField(SectorXActividad) #id_actividad
+
 class Contrato(models.Model):
    id = models.AutoField(primary_key=True)
-   id_actividades = models.ForeignKey(Actividad, on_delete=models.CASCADE)
-   id_sector = models.ForeignKey(Sector,on_delete=models.CASCADE)
-   id_usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-    )
-
-class CoordenadasContratos(models.Model):
-   id_coordenada = models.AutoField(primary_key=True)
-   id_contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE)
-   coordenadas_googleMaps = models.CharField(max_length=255)
-   ubicacion_googleMaps = models.CharField(max_length=255)
-
+   sectores = models.ManyToManyField(ContratoXSector) #id_sector
+   usuarios = models.ManyToManyField(settings.AUTH_USER_MODEL) #id_usuario
+   nombre_contrato = models.CharField(max_length=1024, blank=True)
+   descripcion = models.CharField(max_length=1024, blank=True)
 
 
 class UsuariosManager(BaseUserManager):
    """Manager para perfiles de usuarios"""
 
-   def create_user(self,correo,nombres,apellidos,password=None):
+   def create_user(self,correo,nombres,apellidos,cedula,direccion,tipo_usuario,password=None):
       """Crear nuevo Usuario"""
       if not correo:
          raise ValueError("Usuario debe tener un correo")
       correo = self.normalize_email(correo)
-      user = self.model(correo=correo,nombres=nombres,apellidos=apellidos)
+      user = self.model(
+         correo=correo,
+         nombres=nombres,
+         apellidos=apellidos,
+         cedula=cedula,
+         direccion=direccion,
+         tipo_usuario=tipo_usuario
+      )
       user.set_password(password)
       user.save(using=self._db)
       return user
 
-   def create_superuser(self, correo, nombres, apellidos, password):
-      user = self.create_user(correo,nombres,apellidos,password)
+   def create_superuser(self, correo, nombres, apellidos,cedula,direccion,tipo_usuario, password):
+      user = self.create_user(correo,nombres,apellidos,cedula,direccion,tipo_usuario,password)
       user.is_superuser = True
       user.is_staff = True
       user.save(using=self._db)
