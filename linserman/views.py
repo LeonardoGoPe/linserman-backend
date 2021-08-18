@@ -1,23 +1,19 @@
-from django.shortcuts import render
-from rest_framework import viewsets
-from django.contrib.auth import authenticate
 from .models import *
 from .serializer import *
 
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.hashers import check_password
-
-from rest_framework import generics
 
 # Create your views here.
 
 #Funcion login
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login(request):
     """Método para login de usuario y obtener token"""
     correo = request.POST.get('correo')
@@ -45,9 +41,9 @@ def login(request):
 
 #Usuarios
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def usuarios(request):
     """Método para obtener los usuarios y crear un nuevo usuario"""
-    permission_classes = [IsAuthenticated]
 
     if request.method == 'GET':
         #print(request.query_params)
@@ -74,9 +70,9 @@ def usuarios(request):
 
 #Usuario
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
 def usuario(request, pk):
     """Método para obtener, actualizar o eliminar un usuario"""
-    permission_classes = [IsAuthenticated]
 
     try:
         usuario = Usuarios.objects.get(pk=pk)
@@ -101,9 +97,9 @@ def usuario(request, pk):
 
 #Actividades
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def actividades(request):
     """Método para obtener las actividades y crear una nueva actividad"""
-    permission_classes = [IsAuthenticated]
 
     if request.method == 'GET':
         actividades = Actividad.objects.all()
@@ -119,9 +115,10 @@ def actividades(request):
 
 #Actividad
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
 def actividad(request, pk):
     """Método para obtener, actualizar o eliminar una actividad"""
-    permission_classes = [IsAuthenticated]
+    
 
     try:
         actividad = Actividad.objects.get(pk=pk)
@@ -146,9 +143,10 @@ def actividad(request, pk):
 
 #Sectores
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def sectores(request):
     """Método para obtener los sectores y crear un nuevo sector"""
-    permission_classes = [IsAuthenticated]
+    
 
     if request.method == 'GET':
         sectores = Sector.objects.all()
@@ -164,9 +162,10 @@ def sectores(request):
 
 #Sector
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
 def sector(request, pk):
     """Método para obtener, actualizar o eliminar un sector"""
-    permission_classes = [IsAuthenticated]
+    
 
     try:
         sector = Sector.objects.get(pk=pk)
@@ -191,9 +190,10 @@ def sector(request, pk):
 
 #Contratos
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def contratos(request):
     """Método para obtener los contratos y crear un nuevo contrato"""
-    permission_classes = [IsAuthenticated]
+    
 
     if request.method == 'GET':
         contratos = Contrato.objects.all()
@@ -203,45 +203,56 @@ def contratos(request):
     elif request.method == 'POST':
         actividades = []
         sectores = []
-        usuarios = []
+        usuarios_supervisores = []
+        usuarios_fiscalizadores = []
+
         contrato = {}
-
-        #Crear registros en tabla SectorXActividad
-        for sector in request.data['sectores']:
-            #print(sector['sector_data'])
-
-            for actividad in sector['actividades']:
-                actividad_data = Actividad.objects.get(pk=actividad)
-                actividad_instance = SectorXActividad.objects.create(actividad_data=actividad_data)
-                actividades.append(actividad_instance)
         
         #Crear registros en tabla ContratoXSector
         for sector in request.data['sectores']:
             sector_data = Sector.objects.get(pk=sector['sector_data'])
             sector_instance = ContratoXSector.objects.create(
-                sector_data = sector_data
+                sector_data = sector_data,
+                nombre_sector = sector['nombre_sector']
             )
+
+            for actividad in sector['actividades']:
+                actividad_data = Actividad.objects.get(pk=actividad)
+                actividad_instance = SectorXActividad.objects.create(actividad_data=actividad_data)
+                actividades.append(actividad_instance)
 
             #Setear objetos actividades
             for actividad in actividades:
                 sector_instance.actividades.add(actividad)
+
+            #Obtener data de usuarios
+            for usuario in sector['usuarios_supervisores']:
+                usuario_data = Usuarios.objects.get(pk=usuario)
+                usuarios_supervisores.append(usuario_data)
             
+            for usuario in sector['usuarios_fiscalizadores']:
+                usuario_data = Usuarios.objects.get(pk=usuario)
+                usuarios_fiscalizadores.append(usuario_data)
+
+            #Setear objetos supervisores a sector
+            for usuario in usuarios_supervisores:
+                sector_instance.usuarios_supervisores.add(usuario)
+            
+            #Setear objetos fiscalizadores a sector
+            for usuario in usuarios_fiscalizadores:
+                sector_instance.usuarios_fiscalizadores.add(usuario)
+
             sectores.append(sector_instance)
 
-        #Obtener data de usuarios
-        for usuario in request.data['usuarios']:
-            usuario_data = Usuarios.objects.get(pk=usuario)
-            usuarios.append(usuario_data)
+            actividades = []
+            usuarios_supervisores = []
+            usuarios_fiscalizadores = []
 
         #Crear registro en contrato
         contrato_instance = Contrato.objects.create(
             descripcion = request.data['descripcion'],
             nombre_contrato = request.data['nombre_contrato']
         )
-
-        #Setear objetos usuarios y sectores
-        for usuario in usuarios:
-                contrato_instance.usuarios.add(usuario)
 
         for sector in sectores:
                 contrato_instance.sectores.add(sector)
@@ -256,7 +267,83 @@ def contratos(request):
             return Response({'data':serializer.data,'code':status.HTTP_201_CREATED},status.HTTP_201_CREATED)
         return Response({'data':serializer.errors,'code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
 
-#class UsuariosViewSet(viewsets.ModelViewSet):
-#    """Manejo de usuarios"""
-#    serializer_class = UsuariosSerializer
-#    queryset = Usuarios.objects.all()
+
+#Obtener contratos por usuarios
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def contratosXusuario(request):
+    """Método para obtener los contratos de acuerdo al usuario"""
+    
+
+    if request.method == 'GET':
+
+
+        print(request.query_params.get('tipo_usuario'))
+        if request.query_params.get('tipo_usuario') == None:
+            return Response({'data':'Se debe enviar un tipo de usuario','code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+        
+        elif request.query_params.get('id_usuario') == None:
+            return Response({'data':'Se debe enviar el id del usuario','code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+        
+        else:
+            contratos = Contrato.objects.all()
+            tipo_usuario = request.query_params.get('tipo_usuario')
+            id_usuario = request.query_params.get('id_usuario')
+
+            contratosRespuesta = {}
+            contratosArreglo = []
+            sectores = []
+
+            serializer = []
+
+            flag = False
+
+            if int(tipo_usuario) == 1: #Supervisor
+                for contrato in contratos:
+                    serializer = ContratosSerializer(contrato)
+                    dataContrato = serializer.data
+                    for data in dataContrato['sectores']:
+                        #print(data['usuarios_supervisores'])
+                        for supervisores in data['usuarios_supervisores']:
+                            if int(id_usuario) == int(supervisores['id']):
+                                sectores.append(data)
+                                flag = True
+                    if flag:
+                        print(sectores)
+                        contratosRespuesta['nombre_contrato'] = serializer.data['nombre_contrato']
+                        contratosRespuesta['descripcion'] = serializer.data['descripcion']
+                        contratosRespuesta['sectores'] = sectores
+                        contratosArreglo.append(contratosRespuesta)
+
+                        contratosRespuesta = {}
+                        sectores = []
+                        flag = False
+
+            if int(tipo_usuario) == 2: #Fiscalizador
+                for contrato in contratos:
+                    serializer = ContratosSerializer(contrato)
+                    dataContrato = serializer.data
+                    for data in dataContrato['sectores']:
+                        #print(data['usuarios_supervisores'])
+                        for fiscalizador in data['usuarios_fiscalizadores']:
+                            if int(id_usuario) == int(fiscalizador['id']):
+                                sectores.append(data)
+                                flag = True
+                    if flag:
+                        print(sectores)
+                        contratosRespuesta['nombre_contrato'] = serializer.data['nombre_contrato']
+                        contratosRespuesta['descripcion'] = serializer.data['descripcion']
+                        contratosRespuesta['id_contrato'] = serializer.data['id']
+                        contratosRespuesta['sectores'] = sectores
+                        contratosArreglo.append(contratosRespuesta)
+
+                        contratosRespuesta = {}
+                        sectores = []
+                        flag = False
+
+            if len(sectores) > 0:
+                print(contratosArreglo)
+
+
+            return Response({'data':contratosArreglo,'code':status.HTTP_200_OK},status.HTTP_200_OK)
+

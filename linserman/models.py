@@ -25,8 +25,7 @@ class Actividad(models.Model):
 class Sector(models.Model):
    id_sector = models.AutoField(primary_key=True)
    ciudad = models.CharField(max_length=255)
-   sector = models.CharField(max_length=255)
-   punto_cardinal = models.CharField(max_length=255)
+   zona_ciudad = models.CharField(max_length=255)
 
 
 class SectorXActividad(models.Model):
@@ -36,12 +35,14 @@ class SectorXActividad(models.Model):
 class ContratoXSector(models.Model):
    id = models.AutoField(primary_key=True)
    sector_data = models.ForeignKey(Sector, on_delete=models.CASCADE) #id_sector
+   usuarios_supervisores = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='%(class)s_supervisores') #id_usuario
+   usuarios_fiscalizadores = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='%(class)s_fiscalizadores') #id_usuario
+   nombre_sector = models.CharField(max_length=1024, blank=True)
    actividades = models.ManyToManyField(SectorXActividad) #id_actividad
 
 class Contrato(models.Model):
    id = models.AutoField(primary_key=True)
    sectores = models.ManyToManyField(ContratoXSector) #id_sector
-   usuarios = models.ManyToManyField(settings.AUTH_USER_MODEL) #id_usuario
    nombre_contrato = models.CharField(max_length=1024, blank=True)
    descripcion = models.CharField(max_length=1024, blank=True)
 

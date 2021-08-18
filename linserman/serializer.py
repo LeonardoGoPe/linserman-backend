@@ -5,6 +5,7 @@ from django.db.models import fields
 from rest_framework import serializers
 from .models import *
 
+
 class UsuariosSerializer(serializers.ModelSerializer):
     """Serializamos el perfil del usuario"""
 
@@ -35,7 +36,7 @@ class UsuariosSerializer(serializers.ModelSerializer):
 class SectoresSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sector
-        fields = ['id_sector','ciudad','sector','punto_cardinal']
+        fields = ['id_sector','ciudad','zona_ciudad']
 
 class ActividadesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,15 +54,16 @@ class SectorXActividadSerializer(serializers.ModelSerializer):
 class ContratoXSectorSerializer(serializers.ModelSerializer):
     sector_data = SectoresSerializer(read_only=True)
     actividades = SectorXActividadSerializer(many=True, read_only=True)
+    usuarios_fiscalizadores = UsuariosSerializer(many=True, read_only=True)
+    usuarios_supervisores = UsuariosSerializer(many=True, read_only=True)
 
     class Meta:
         model = ContratoXSector
-        fields = ['sector_data','actividades']
+        fields = ['id','sector_data','nombre_sector','actividades','usuarios_fiscalizadores','usuarios_supervisores']
 
 class ContratosSerializer(serializers.ModelSerializer):
-    usuarios = UsuariosSerializer(many=True, read_only=True)
     sectores = ContratoXSectorSerializer(many=True, read_only=True)
 
     class Meta:
         model = Contrato
-        fields = ['usuarios','sectores','descripcion','nombre_contrato']
+        fields = ['id','sectores','descripcion','nombre_contrato']
