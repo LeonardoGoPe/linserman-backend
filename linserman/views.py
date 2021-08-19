@@ -312,6 +312,7 @@ def contratosXusuario(request):
                         print(sectores)
                         contratosRespuesta['nombre_contrato'] = serializer.data['nombre_contrato']
                         contratosRespuesta['descripcion'] = serializer.data['descripcion']
+                        contratosRespuesta['id_contrato'] = serializer.data['id']
                         contratosRespuesta['sectores'] = sectores
                         contratosArreglo.append(contratosRespuesta)
 
