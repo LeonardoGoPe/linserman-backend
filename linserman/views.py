@@ -77,7 +77,7 @@ def usuario(request, pk):
     try:
         usuario = Usuarios.objects.get(pk=pk)
     except Usuarios.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'data':'Usuario no encontrado','code':status.HTTP_404_NOT_FOUND},status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = UsuariosSerializer(usuario)
@@ -123,7 +123,7 @@ def actividad(request, pk):
     try:
         actividad = Actividad.objects.get(pk=pk)
     except Actividad.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'data':'Actividad no encontrada','code':status.HTTP_404_NOT_FOUND},status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = ActividadesSerializer(actividad)
@@ -170,7 +170,7 @@ def sector(request, pk):
     try:
         sector = Sector.objects.get(pk=pk)
     except Sector.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'data':'Sector no encontrado','code':status.HTTP_404_NOT_FOUND},status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = SectoresSerializer(sector)
@@ -208,8 +208,10 @@ def contratos(request):
 
         contrato = {}
         
+        print("REQUESTT",request.data)
         #Crear registros en tabla ContratoXSector
         for sector in request.data['sectores']:
+            print(sector['sector_data'])
             sector_data = Sector.objects.get(pk=sector['sector_data'])
             sector_instance = ContratoXSector.objects.create(
                 sector_data = sector_data,
@@ -218,12 +220,7 @@ def contratos(request):
 
             for actividad in sector['actividades']:
                 actividad_data = Actividad.objects.get(pk=actividad)
-                actividad_instance = SectorXActividad.objects.create(actividad_data=actividad_data)
-                actividades.append(actividad_instance)
-
-            #Setear objetos actividades
-            for actividad in actividades:
-                sector_instance.actividades.add(actividad)
+                actividades.append(actividad_data)
 
             #Obtener data de usuarios
             for usuario in sector['usuarios_supervisores']:
@@ -233,6 +230,11 @@ def contratos(request):
             for usuario in sector['usuarios_fiscalizadores']:
                 usuario_data = Usuarios.objects.get(pk=usuario)
                 usuarios_fiscalizadores.append(usuario_data)
+
+
+            #Setear objetos actividades
+            for actividad in actividades:
+                sector_instance.actividades.add(actividad)
 
             #Setear objetos supervisores a sector
             for usuario in usuarios_supervisores:
@@ -266,6 +268,80 @@ def contratos(request):
             #print(serializer)
             return Response({'data':serializer.data,'code':status.HTTP_201_CREATED},status.HTTP_201_CREATED)
         return Response({'data':serializer.errors,'code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET','PUT'])
+@permission_classes([IsAuthenticated])
+def contrato(request, pk):
+    """Método para obtener y actualizar un contrato"""
+    
+    try:
+        contrato = Contrato.objects.get(pk=pk)
+    except Contrato.DoesNotExist:
+        return Response({'data':'Contrato no encontrado','code':status.HTTP_404_NOT_FOUND},status=status.HTTP_404_NOT_FOUND)
+
+
+
+    if request.method == 'GET':
+        serializer = ContratosSerializer(contrato)
+        return Response({'data':serializer.data,'code':status.HTTP_200_OK},status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
+        contratoData = ContratosSerializer(contrato).data
+        #print(contratoData)
+
+        if request.query_params.get('id_sector') == None:
+            return Response({'data':'Se debe elegir un sector','code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+        
+        else:
+
+            usuarios_supervisores = []
+            usuarios_fiscalizadores = []
+            actividades = []
+
+            id_sector = request.query_params.get('id_sector')
+            sectorObjecto = ContratoXSector.objects.get(pk=id_sector)
+
+            print("AAAA",sectorObjecto)
+
+
+            for supervisor in request.data['sector']['usuarios_supervisores']:
+                #print(supervisor)
+                usuario_data = Usuarios.objects.get(pk=supervisor)
+                usuarios_supervisores.append(usuario_data)
+
+
+            for fiscalizador in request.data['sector']['usuarios_fiscalizadores']:
+                #print(fiscalizador)
+                usuario_data = Usuarios.objects.get(pk=fiscalizador)
+                usuarios_fiscalizadores.append(usuario_data)
+
+
+            for actividad in request.data['sector']['actividades']:
+                #print(fiscalizador)
+                actividad_data = Actividad.objects.get(pk=actividad)
+                actividades.append(actividad_data)
+            
+            sectorObjecto.usuarios_supervisores.clear()
+            sectorObjecto.usuarios_fiscalizadores.clear()
+            sectorObjecto.actividades.clear()
+
+            #Setear objetos supervisores a sector
+            for usuario in usuarios_supervisores:
+                sectorObjecto.usuarios_supervisores.add(usuario)
+            
+            #Setear objetos fiscalizadores a sector
+            for usuario in usuarios_fiscalizadores:
+                sectorObjecto.usuarios_fiscalizadores.add(usuario)
+
+            #Setear objetos actividades a sector
+            for actividad in actividades:
+                sectorObjecto.actividades.add(actividad)
+
+            serializer = ContratoXSectorSerializer(sectorObjecto, partial=True)
+            
+            #print("SSSSSSSSSSSSSSSS",serializer)
+            return Response({'data':serializer.data,'code':status.HTTP_202_ACCEPTED},status.HTTP_202_ACCEPTED)
 
 
 #Obtener contratos por usuarios

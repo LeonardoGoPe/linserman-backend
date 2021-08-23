@@ -20,31 +20,32 @@ class Actividad(models.Model):
    id_actividad = models.AutoField(primary_key=True)
    nemonico_actividad = models.CharField(max_length=255)
    texto_descripcion = models.CharField(max_length=255)
+   actividadActiva = models.BooleanField(default=True)
 
 
 class Sector(models.Model):
    id_sector = models.AutoField(primary_key=True)
    ciudad = models.CharField(max_length=255)
    zona_ciudad = models.CharField(max_length=255)
+   sectorActivo = models.BooleanField(default=True)
 
-
-class SectorXActividad(models.Model):
-   id = models.AutoField(primary_key=True)
-   actividad_data = models.ForeignKey(Actividad, on_delete=models.CASCADE) #id_actividad
 
 class ContratoXSector(models.Model):
    id = models.AutoField(primary_key=True)
-   sector_data = models.ForeignKey(Sector, on_delete=models.CASCADE) #id_sector
+   sector_data = models.ForeignKey(Sector, on_delete=CASCADE) #id_sector
    usuarios_supervisores = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='%(class)s_supervisores') #id_usuario
    usuarios_fiscalizadores = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='%(class)s_fiscalizadores') #id_usuario
    nombre_sector = models.CharField(max_length=1024, blank=True)
-   actividades = models.ManyToManyField(SectorXActividad) #id_actividad
+   actividades = models.ManyToManyField(Actividad) #id_actividad
+   contratoXSectorActivo = models.BooleanField(default=True)
 
 class Contrato(models.Model):
    id = models.AutoField(primary_key=True)
    sectores = models.ManyToManyField(ContratoXSector) #id_sector
    nombre_contrato = models.CharField(max_length=1024, blank=True)
    descripcion = models.CharField(max_length=1024, blank=True)
+   contratoActivo = models.BooleanField(default=True)
+
 
 
 class UsuariosManager(BaseUserManager):

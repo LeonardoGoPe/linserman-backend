@@ -11,7 +11,7 @@ class UsuariosSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuarios
-        fields = ('id','cedula','correo','nombres','apellidos','direccion','tipo_usuario','password')
+        fields = ('id','cedula','correo','nombres','apellidos','direccion','tipo_usuario','password','is_active')
         extra_kwargs = {
             'password': {
                 'write_only':True
@@ -36,34 +36,26 @@ class UsuariosSerializer(serializers.ModelSerializer):
 class SectoresSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sector
-        fields = ['id_sector','ciudad','zona_ciudad']
+        fields = '__all__'
 
 class ActividadesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Actividad
-        fields = ['id_actividad','nemonico_actividad','texto_descripcion']
-
-
-class SectorXActividadSerializer(serializers.ModelSerializer):
-    actividad_data = ActividadesSerializer(read_only=True)
-
-    class Meta:
-        model = SectorXActividad
-        fields = ['actividad_data']
+        fields = '__all__'
 
 class ContratoXSectorSerializer(serializers.ModelSerializer):
     sector_data = SectoresSerializer(read_only=True)
-    actividades = SectorXActividadSerializer(many=True, read_only=True)
+    actividades = ActividadesSerializer(many=True, read_only=True)
     usuarios_fiscalizadores = UsuariosSerializer(many=True, read_only=True)
     usuarios_supervisores = UsuariosSerializer(many=True, read_only=True)
 
     class Meta:
         model = ContratoXSector
-        fields = ['id','sector_data','nombre_sector','actividades','usuarios_fiscalizadores','usuarios_supervisores']
+        fields = '__all__'
 
 class ContratosSerializer(serializers.ModelSerializer):
     sectores = ContratoXSectorSerializer(many=True, read_only=True)
 
     class Meta:
         model = Contrato
-        fields = ['id','sectores','descripcion','nombre_contrato']
+        fields = '__all__'
