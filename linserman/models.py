@@ -51,7 +51,7 @@ class Contrato(models.Model):
 class UsuariosManager(BaseUserManager):
    """Manager para perfiles de usuarios"""
 
-   def create_user(self,correo,nombres,apellidos,cedula,direccion,tipo_usuario,password=None):
+   def create_user(self,correo,nombres,apellidos,cedula,direccion,tipo_usuario,empresa,password=None):
       """Crear nuevo Usuario"""
       if not correo:
          raise ValueError("Usuario debe tener un correo")
@@ -62,14 +62,15 @@ class UsuariosManager(BaseUserManager):
          apellidos=apellidos,
          cedula=cedula,
          direccion=direccion,
-         tipo_usuario=tipo_usuario
+         tipo_usuario=tipo_usuario,
+         empresa = empresa
       )
       user.set_password(password)
       user.save(using=self._db)
       return user
 
-   def create_superuser(self, correo, nombres, apellidos,cedula,direccion,tipo_usuario, password):
-      user = self.create_user(correo,nombres,apellidos,cedula,direccion,tipo_usuario,password)
+   def create_superuser(self, correo, nombres, apellidos,cedula,direccion,tipo_usuario,empresa, password):
+      user = self.create_user(correo,nombres,apellidos,cedula,direccion,tipo_usuario,empresa,password)
       user.is_superuser = True
       user.is_staff = True
       user.save(using=self._db)
@@ -86,6 +87,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
    is_active = models.BooleanField(default=True)
    is_staff = models.BooleanField(default=False)
    tipo_usuario = models.IntegerField(choices=TIPOS_USUARIOS, default=1)
+   empresa = models.CharField(max_length=255, blank=True)
 
    objects = UsuariosManager()
 

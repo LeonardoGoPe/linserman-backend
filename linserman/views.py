@@ -33,8 +33,10 @@ def login(request):
 
     return Response({'data':{
         'token':token.key,
-        'nombres':user.nombres,
-        'apellidos':user.apellidos,
+        'nombres':usuario.nombres,
+        'apellidos':usuario.apellidos,
+        'id':usuario.id,
+        'empresa':usuario.empresa,
         'tipo_usuario':usuario.tipo_usuario,
     },'code':status.HTTP_200_OK},status.HTTP_200_OK)
 
@@ -389,6 +391,7 @@ def contratosXusuario(request):
                         contratosRespuesta['nombre_contrato'] = serializer.data['nombre_contrato']
                         contratosRespuesta['descripcion'] = serializer.data['descripcion']
                         contratosRespuesta['id_contrato'] = serializer.data['id']
+                        contratosRespuesta['contratoActivo'] = serializer.data['contratoActivo']
                         contratosRespuesta['sectores'] = sectores
                         contratosArreglo.append(contratosRespuesta)
 
@@ -411,6 +414,7 @@ def contratosXusuario(request):
                         contratosRespuesta['nombre_contrato'] = serializer.data['nombre_contrato']
                         contratosRespuesta['descripcion'] = serializer.data['descripcion']
                         contratosRespuesta['id_contrato'] = serializer.data['id']
+                        contratosRespuesta['contratoActivo'] = serializer.data['contratoActivo']
                         contratosRespuesta['sectores'] = sectores
                         contratosArreglo.append(contratosRespuesta)
 

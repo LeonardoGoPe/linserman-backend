@@ -11,7 +11,7 @@ class UsuariosSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuarios
-        fields = ('id','cedula','correo','nombres','apellidos','direccion','tipo_usuario','password','is_active')
+        fields = ('id','cedula','correo','nombres','apellidos','direccion','tipo_usuario','password','empresa','is_active')
         extra_kwargs = {
             'password': {
                 'write_only':True
@@ -28,6 +28,7 @@ class UsuariosSerializer(serializers.ModelSerializer):
             cedula = validated_data['cedula'],
             direccion = validated_data['direccion'],
             tipo_usuario = validated_data['tipo_usuario'],
+            empresa = validated_data['empresa'],
             password = validated_data['password'],
         )
 
