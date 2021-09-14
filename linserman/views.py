@@ -31,12 +31,16 @@ def login(request):
 
     token, created = Token.objects.get_or_create(user=user)
 
+
+    empresa = Empresa.objects.get(pk = usuario.empresa.id_empresa)
+    empresaResp = EmpresaSerializer(empresa)
+
     return Response({'data':{
         'token':token.key,
         'nombres':usuario.nombres,
         'apellidos':usuario.apellidos,
         'id':usuario.id,
-        'empresa':usuario.empresa,
+        'empresa':empresaResp.data,
         'tipo_usuario':usuario.tipo_usuario,
     },'code':status.HTTP_200_OK},status.HTTP_200_OK)
 
