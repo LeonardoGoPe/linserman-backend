@@ -190,6 +190,52 @@ def sector(request, pk):
         return Response({'data':'Eliminación exitosa','code':status.HTTP_204_NO_CONTENT})
 
 
+#Empresas
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def empresas(request):
+    """Método para obtener las empresas y crear una nueva empresa"""
+
+    if request.method == 'GET':
+        empresas = Empresa.objects.all()
+        serializer = EmpresaSerializer(empresas, many=True)
+        return Response({'data':serializer.data,'code':status.HTTP_200_OK},status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        serializer = EmpresaSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'data':serializer.data,'code':status.HTTP_201_CREATED},status.HTTP_201_CREATED)
+        return Response({'data':serializer.errors,'code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+
+#Empresa
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def empresa(request, pk):
+    """Método para obtener, actualizar o eliminar una empresa"""
+    
+
+    try:
+        empresa = Empresa.objects.get(pk=pk)
+    except Empresa.DoesNotExist:
+        return Response({'data':'Empresa no encontrada','code':status.HTTP_404_NOT_FOUND},status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = EmpresaSerializer(empresa)
+        return Response({'data':serializer.data,'code':status.HTTP_200_OK},status.HTTP_200_OK)
+
+    elif request.method == 'PUT':
+        serializer = EmpresaSerializer(empresa, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'data':serializer.data,'code':status.HTTP_202_ACCEPTED},status.HTTP_202_ACCEPTED)
+        return Response({'data':serializer.errors,'code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        empresa.delete()
+        return Response({'data':'Eliminación exitosa','code':status.HTTP_204_NO_CONTENT})
+
+
 #Contratos
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])

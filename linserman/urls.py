@@ -19,6 +19,8 @@ urlpatterns = [
    path('sectores/<int:pk>', views.sector),
    path('contratos/', views.contratos),
    path('contratos/<int:pk>', views.contrato),
+   path('empresas/', views.empresas),
+   path('empresas/<int:pk>', views.empresa),
    path('obtener_contratos/', views.contratosXusuario),
    #path('',include(router.urls))
 ]

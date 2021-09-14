@@ -16,6 +16,14 @@ TIPOS_USUARIOS =(
     (3, "Administrador"),
 )
 
+class Empresa(models.Model):
+   id_empresa = models.AutoField(primary_key=True)
+   nombre_empresa = models.CharField(max_length=255, blank=True)
+   ruc_empresa = models.CharField(max_length=64, blank=True)
+   descripcion_empresa = models.CharField(max_length=255, blank=True)
+   empresaActiva = models.BooleanField(default=True)
+
+
 class Actividad(models.Model):
    id_actividad = models.AutoField(primary_key=True)
    nemonico_actividad = models.CharField(max_length=255)
@@ -87,7 +95,7 @@ class Usuarios(AbstractBaseUser, PermissionsMixin):
    is_active = models.BooleanField(default=True)
    is_staff = models.BooleanField(default=False)
    tipo_usuario = models.IntegerField(choices=TIPOS_USUARIOS, default=1)
-   empresa = models.CharField(max_length=255, blank=True)
+   empresa = models.ForeignKey(Empresa, on_delete=CASCADE, default=1)
 
    objects = UsuariosManager()
 
