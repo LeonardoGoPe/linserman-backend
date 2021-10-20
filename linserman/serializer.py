@@ -65,6 +65,7 @@ class ContratoXSectorSerializer(serializers.ModelSerializer):
 
 class ContratosSerializer(serializers.ModelSerializer):
     sectores = ContratoXSectorSerializer(many=True, read_only=True)
+    empresa = EmpresaSerializer(read_only=True)
 
     class Meta:
         model = Contrato

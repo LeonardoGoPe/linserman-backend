@@ -303,9 +303,12 @@ def contratos(request):
             usuarios_fiscalizadores = []
 
         #Crear registro en contrato
+        empresa = Empresa.objects.get(pk=request.data['empresa'])
         contrato_instance = Contrato.objects.create(
             descripcion = request.data['descripcion'],
-            nombre_contrato = request.data['nombre_contrato']
+            nombre_contrato = request.data['nombre_contrato'],
+            empresa = empresa
+
         )
 
         for sector in sectores:

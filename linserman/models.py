@@ -50,6 +50,7 @@ class ContratoXSector(models.Model):
 class Contrato(models.Model):
    id = models.AutoField(primary_key=True)
    sectores = models.ManyToManyField(ContratoXSector) #id_sector
+   empresa = models.ForeignKey(Empresa, on_delete=CASCADE) #Empresa
    nombre_contrato = models.CharField(max_length=1024, blank=True)
    descripcion = models.CharField(max_length=1024, blank=True)
    contratoActivo = models.BooleanField(default=True)
