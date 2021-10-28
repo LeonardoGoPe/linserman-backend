@@ -440,11 +440,13 @@ def contratosXusuario(request):
                                 sectores.append(data)
                                 flag = True
                     if flag:
-                        print(sectores)
+                        #print(sectores)
+                        #print(serializer.data['empresa'])
                         contratosRespuesta['nombre_contrato'] = serializer.data['nombre_contrato']
                         contratosRespuesta['descripcion'] = serializer.data['descripcion']
                         contratosRespuesta['id_contrato'] = serializer.data['id']
                         contratosRespuesta['contratoActivo'] = serializer.data['contratoActivo']
+                        contratosRespuesta['empresa'] = serializer.data['empresa']
                         contratosRespuesta['sectores'] = sectores
                         contratosArreglo.append(contratosRespuesta)
 
@@ -463,11 +465,13 @@ def contratosXusuario(request):
                                 sectores.append(data)
                                 flag = True
                     if flag:
-                        print(sectores)
+                        #print(sectores)
+                        #print(serializer.data['empresa'])
                         contratosRespuesta['nombre_contrato'] = serializer.data['nombre_contrato']
                         contratosRespuesta['descripcion'] = serializer.data['descripcion']
                         contratosRespuesta['id_contrato'] = serializer.data['id']
                         contratosRespuesta['contratoActivo'] = serializer.data['contratoActivo']
+                        contratosRespuesta['empresa'] = serializer.data['empresa']
                         contratosRespuesta['sectores'] = sectores
                         contratosArreglo.append(contratosRespuesta)
 
