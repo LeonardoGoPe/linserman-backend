@@ -101,6 +101,25 @@ def usuario(request, pk):
         return Response({'data':'Eliminación exitosa','code':status.HTTP_204_NO_CONTENT},status.HTTP_204_NO_CONTENT)
 
 
+
+#Usuario
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cambioPassword(request, pk):
+    """Método actualizar clave de un usuario"""
+
+    try:
+        usuario = Usuarios.objects.get(pk=pk)
+    except Usuarios.DoesNotExist:
+        return Response({'data':'Usuario no encontrado','code':status.HTTP_404_NOT_FOUND},status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'POST':
+        usuario.set_password(request.data['password'])
+        usuario.save()
+
+        return Response({'data':"OK",'code':status.HTTP_200_OK},status.HTTP_200_OK)
+
+
 #Actividades
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -324,7 +343,6 @@ def contratos(request):
             return Response({'data':serializer.data,'code':status.HTTP_201_CREATED},status.HTTP_201_CREATED)
         return Response({'data':serializer.errors,'code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
 
-
 @api_view(['GET','PUT'])
 @permission_classes([IsAuthenticated])
 def contrato(request, pk):
@@ -357,7 +375,8 @@ def contrato(request, pk):
             id_sector = request.query_params.get('id_sector')
             sectorObjecto = ContratoXSector.objects.get(pk=id_sector)
 
-            print("AAAA",sectorObjecto)
+            print("AAAA", sectorObjecto.sector_data)
+            print("CCCC", request.data['sector']['sector_data'])
 
 
             for supervisor in request.data['sector']['usuarios_supervisores']:
@@ -377,6 +396,8 @@ def contrato(request, pk):
                 actividad_data = Actividad.objects.get(pk=actividad)
                 actividades.append(actividad_data)
             
+            sector_data_nueva = Sector.objects.get(pk=request.data['sector']['sector_data'])
+
             sectorObjecto.usuarios_supervisores.clear()
             sectorObjecto.usuarios_fiscalizadores.clear()
             sectorObjecto.actividades.clear()
@@ -392,11 +413,106 @@ def contrato(request, pk):
             #Setear objetos actividades a sector
             for actividad in actividades:
                 sectorObjecto.actividades.add(actividad)
+            
+            sectorObjecto.sector_data = sector_data_nueva
+
+            #Actualizar el sector del contrato
+            ContratoXSector.objects.filter(id = request.query_params.get('id_sector')).update(
+                sector_data = sector_data_nueva,
+                nombre_sector = request.data['sector']['nombre_sector'],
+                contratoXSectorActivo = request.data['sector']['contratoXSectorActivo']
+            )
 
             serializer = ContratoXSectorSerializer(sectorObjecto, partial=True)
             
             #print("SSSSSSSSSSSSSSSS",serializer)
             return Response({'data':serializer.data,'code':status.HTTP_202_ACCEPTED},status.HTTP_202_ACCEPTED)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def contratoCabecera(request, pk):
+    try:
+        contrato = Contrato.objects.get(pk=pk)
+    except Contrato.DoesNotExist:
+        return Response({'data':'Contrato no encontrado','code':status.HTTP_404_NOT_FOUND},status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PUT':
+        serializer = ContratosSerializer(contrato, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'data':serializer.data,'code':status.HTTP_202_ACCEPTED},status.HTTP_202_ACCEPTED)
+        return Response({'data':serializer.errors,'code':status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def contratoAgregarSector(request, pk):
+
+    try:
+        contrato = Contrato.objects.get(pk=pk)
+    except Contrato.DoesNotExist:
+        return Response({'data':'Contrato no encontrado','code':status.HTTP_404_NOT_FOUND},status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'POST':
+        actividades = []
+        sectores = []
+        usuarios_supervisores = []
+        usuarios_fiscalizadores = []
+        
+        print("REQUESTT",request.data)
+        #Crear registros en tabla ContratoXSector
+        for sector in request.data['sectores']:
+            print(sector['sector_data'])
+            sector_data = Sector.objects.get(pk=sector['sector_data'])
+            sector_instance = ContratoXSector.objects.create(
+                sector_data = sector_data,
+                nombre_sector = sector['nombre_sector']
+            )
+
+            for actividad in sector['actividades']:
+                actividad_data = Actividad.objects.get(pk=actividad)
+                actividades.append(actividad_data)
+
+            #Obtener data de usuarios
+            for usuario in sector['usuarios_supervisores']:
+                usuario_data = Usuarios.objects.get(pk=usuario)
+                usuarios_supervisores.append(usuario_data)
+            
+            for usuario in sector['usuarios_fiscalizadores']:
+                usuario_data = Usuarios.objects.get(pk=usuario)
+                usuarios_fiscalizadores.append(usuario_data)
+
+
+            #Setear objetos actividades
+            for actividad in actividades:
+                sector_instance.actividades.add(actividad)
+
+            #Setear objetos supervisores a sector
+            for usuario in usuarios_supervisores:
+                sector_instance.usuarios_supervisores.add(usuario)
+            
+            #Setear objetos fiscalizadores a sector
+            for usuario in usuarios_fiscalizadores:
+                sector_instance.usuarios_fiscalizadores.add(usuario)
+
+            sectores.append(sector_instance)
+
+            actividades = []
+            usuarios_supervisores = []
+            usuarios_fiscalizadores = []
+
+        #Crear registro en contrato
+        for sector in sectores:
+                contrato.sectores.add(sector)
+
+        print(contrato)
+        serializer = ContratosSerializer(contrato)
+        print(ContratosSerializer(serializer.data))
+
+        #print(request.data)
+        #print(serializerFin)
+        return Response({'data':serializer.data,'code':status.HTTP_201_CREATED},status.HTTP_201_CREATED)
+
 
 
 #Obtener contratos por usuarios
